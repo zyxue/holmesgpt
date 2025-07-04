@@ -21,11 +21,13 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
+import phoenix.otel
 from rich.console import Console
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.rule import Rule
 
+import os
 from holmes import get_version  # type: ignore
 from holmes.config import (
     DEFAULT_CONFIG_LOCATION,
@@ -43,6 +45,15 @@ from holmes.plugins.interfaces import Issue
 from holmes.plugins.prompts import load_and_render_prompt
 from holmes.plugins.sources.opsgenie import OPSGENIE_TEAM_INTEGRATION_KEY_HELP
 from holmes.utils.file_utils import write_json_file
+
+phoenix.otel.register(
+    endpoint=f"{os.environ['PHOENIX_COLLECTOR_ENDPOINT']}/v1/traces",
+    project_name=os.environ["PHOENIX_PROJECT_NAME"],
+    auto_instrument=True,
+    set_global_tracer_provider=False,
+    protocol="grpc",
+    batch=True,
+)
 
 app = typer.Typer(add_completion=False, pretty_exceptions_show_locals=False)
 investigate_app = typer.Typer(
